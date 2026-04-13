@@ -69,7 +69,7 @@ import { Message, Persona, FeedbackReport, Scenario } from "./types";
 import { getPersonaResponse, generateFeedback } from "./services/geminiService";
 
 export default function App() {
-  const [step, setStep] = useState<"login" | "persona_selection" | "scenario_selection" | "briefing" | "chat" | "report">("login");
+  const [step, setStep] = useState<"login" | "persona_selection" | "scenario_selection" | "chat" | "report">("login");
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [personas, setPersonas] = useState<Persona[]>([]);
@@ -258,25 +258,15 @@ export default function App() {
     setStep("scenario_selection");
   };
 
-  const selectScenario = (scenario: Scenario) => {
+  const startSimulation = (scenario: Scenario) => {
+    if (!selectedPersona) return;
     setSelectedScenario(scenario);
-    setStep("briefing");
-  };
-
-  const startSimulation = () => {
-    if (!selectedPersona || !selectedScenario) return;
     setMessages([
       { 
         role: "assistant", 
         content: `반갑습니다, 지점장님. ${selectedPersona.name}입니다. 무슨 일로 부르셨나요?`, 
         timestamp: Date.now(),
-        analysis: { 
-          sentiment: "무덤덤함", 
-          cooperation: 50, 
-          intent: "면담 시작 대기",
-          achievedGoalIndices: [],
-          metrics: { trust: 50, acceptance: 50, stability: 50, engagement: 50 }
-        }
+        analysis: { sentiment: "무덤덤함", cooperation: 50, intent: "면담 시작 대기" }
       }
     ]);
     setStep("chat");
@@ -663,7 +653,7 @@ export default function App() {
                     <Card className={`h-full border-none shadow-xl hover:shadow-2xl transition-all cursor-pointer group rounded-3xl overflow-hidden flex flex-col ${
                       theme === "dark" ? "bg-white/5 backdrop-blur-xl" : "bg-white"
                     }`}
-                      onClick={() => selectScenario(scenario)}
+                      onClick={() => startSimulation(scenario)}
                     >
                       <CardHeader className="pb-4">
                         <div className="w-12 h-12 bg-[#007FA8]/10 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#007FA8] transition-all shadow-inner">
@@ -689,83 +679,6 @@ export default function App() {
                     </Card>
                   </motion.div>
                 ))}
-              </div>
-            </motion.div>
-          )}
-
-          {step === "briefing" && selectedPersona && selectedScenario && (
-            <motion.div
-              key="briefing"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="max-w-4xl mx-auto"
-            >
-              <div className="flex items-center gap-4 mb-10">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => setStep("scenario_selection")}
-                  className={`rounded-xl ${theme === "dark" ? "text-white/40 hover:text-white hover:bg-white/5" : "text-[#002C5F]/40 hover:text-[#002C5F] hover:bg-[#002C5F]/5"}`}
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </Button>
-                <div>
-                  <h2 className={`text-4xl font-bold tracking-tight ${theme === "dark" ? "text-white" : "text-[#002C5F]"}`}>면담 브리핑 📋</h2>
-                  <p className={theme === "dark" ? "text-white/40 text-lg" : "text-[#002C5F]/40 text-lg"}>시뮬레이션 시작 전 상황을 숙지해주세요</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <Card className={`md:col-span-2 border-none shadow-2xl rounded-[2.5rem] overflow-hidden ${theme === "dark" ? "bg-white/5 backdrop-blur-xl" : "bg-white"}`}>
-                  <CardHeader className={`border-b ${theme === "dark" ? "border-white/5 bg-white/5" : "border-[#002C5F]/5 bg-[#002C5F]/5"}`}>
-                    <CardTitle className={`flex items-center gap-3 ${theme === "dark" ? "text-white/90" : "text-[#002C5F]/90"}`}>
-                      <Info className="w-6 h-6 text-[#007FA8]" /> 면담 배경 및 상황
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8 space-y-6">
-                    <div className={`p-6 rounded-3xl leading-relaxed ${theme === "dark" ? "bg-white/5 text-white/80" : "bg-[#002C5F]/5 text-[#002C5F]/80"}`}>
-                      {selectedScenario.context}
-                    </div>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <p className={`text-xs font-bold uppercase tracking-wider ${theme === "dark" ? "text-white/20" : "text-[#002C5F]/20"}`}>면담 주제</p>
-                        <p className={`text-sm font-medium ${theme === "dark" ? "text-white/90" : "text-[#002C5F]/90"}`}>{selectedScenario.title}</p>
-                      </div>
-                      <div className="space-y-2">
-                        <p className={`text-xs font-bold uppercase tracking-wider ${theme === "dark" ? "text-white/20" : "text-[#002C5F]/20"}`}>최종 목표</p>
-                        <p className={`text-sm font-medium ${theme === "dark" ? "text-white/90" : "text-[#002C5F]/90"}`}>{selectedScenario.goal}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div className="space-y-8">
-                  <Card className={`border-none shadow-2xl rounded-[2.5rem] overflow-hidden ${theme === "dark" ? "bg-white/5 backdrop-blur-xl" : "bg-white"}`}>
-                    <CardHeader className={`border-b ${theme === "dark" ? "border-white/5 bg-white/5" : "border-[#002C5F]/5 bg-[#002C5F]/5"}`}>
-                      <CardTitle className={`text-sm flex items-center gap-2 ${theme === "dark" ? "text-white/90" : "text-[#002C5F]/90"}`}>
-                        <User className="w-4 h-4 text-[#007FA8]" /> 면담 대상자
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6 space-y-4">
-                      <div className="flex items-center gap-4">
-                        <div className="text-4xl">{selectedPersona.emoji}</div>
-                        <div>
-                          <p className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-[#002C5F]"}`}>{selectedPersona.name}</p>
-                          <p className={theme === "dark" ? "text-white/40 text-xs" : "text-[#002C5F]/40 text-xs"}>{selectedPersona.role}</p>
-                        </div>
-                      </div>
-                      <p className={`text-xs leading-relaxed ${theme === "dark" ? "text-white/60" : "text-[#002C5F]/60"}`}>{selectedPersona.description}</p>
-                    </CardContent>
-                  </Card>
-
-                  <Button 
-                    onClick={startSimulation}
-                    className="w-full h-20 bg-[#007FA8] hover:bg-[#0096C7] text-white rounded-[2rem] text-xl font-bold shadow-2xl shadow-[#007FA8]/30 group"
-                  >
-                    시뮬레이션 시작 <ChevronRight className="ml-3 w-6 h-6 group-hover:translate-x-2 transition-transform" />
-                  </Button>
-                </div>
               </div>
             </motion.div>
           )}
@@ -1227,51 +1140,6 @@ export default function App() {
                         * 이 리포트는 AI 분석 결과이며, 실제 현장 상황에 맞춰 유연하게 적용하시기 바랍니다.
                       </p>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* SBI Analysis */}
-                <Card className={`lg:col-span-2 border-none shadow-2xl rounded-[2.5rem] ${theme === "dark" ? "bg-white/5 backdrop-blur-xl" : "bg-white"}`}>
-                  <CardHeader>
-                    <CardTitle className={`flex items-center gap-3 ${theme === "dark" ? "text-white/90" : "text-[#002C5F]/90"}`}>
-                      <Target className="w-6 h-6 text-[#007FA8]" /> SBI 피드백 분석
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-                    <div className="space-y-3">
-                      <Badge className="bg-[#007FA8]/10 text-[#007FA8] border-none rounded-lg px-3 py-1">Situation</Badge>
-                      <p className={`text-sm leading-relaxed ${theme === "dark" ? "text-white/70" : "text-[#002C5F]/70"}`}>{report.sbiAnalysis.situation}</p>
-                    </div>
-                    <div className="space-y-3">
-                      <Badge className="bg-[#007FA8]/10 text-[#007FA8] border-none rounded-lg px-3 py-1">Behavior</Badge>
-                      <p className={`text-sm leading-relaxed ${theme === "dark" ? "text-white/70" : "text-[#002C5F]/70"}`}>{report.sbiAnalysis.behavior}</p>
-                    </div>
-                    <div className="space-y-3">
-                      <Badge className="bg-[#007FA8]/10 text-[#007FA8] border-none rounded-lg px-3 py-1">Impact</Badge>
-                      <p className={`text-sm leading-relaxed ${theme === "dark" ? "text-white/70" : "text-[#002C5F]/70"}`}>{report.sbiAnalysis.impact}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* GROW Model */}
-                <Card className={`lg:col-span-1 border-none shadow-2xl rounded-[2.5rem] ${theme === "dark" ? "bg-white/5 backdrop-blur-xl" : "bg-white"}`}>
-                  <CardHeader>
-                    <CardTitle className={`flex items-center gap-3 ${theme === "dark" ? "text-white/90" : "text-[#002C5F]/90"}`}>
-                      <TrendingUp className="w-6 h-6 text-[#007FA8]" /> GROW 코칭 모델
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6 pt-4">
-                    {[
-                      { label: "Goal", val: report.growModel.goal, color: "text-blue-400" },
-                      { label: "Reality", val: report.growModel.reality, color: "text-emerald-400" },
-                      { label: "Options", val: report.growModel.options, color: "text-amber-400" },
-                      { label: "Will", val: report.growModel.will, color: "text-rose-400" }
-                    ].map((item) => (
-                      <div key={item.label} className="flex gap-4">
-                        <span className={`text-xs font-black w-12 pt-1 ${item.color}`}>{item.label}</span>
-                        <p className={`text-xs leading-relaxed ${theme === "dark" ? "text-white/60" : "text-[#002C5F]/60"}`}>{item.val}</p>
-                      </div>
-                    ))}
                   </CardContent>
                 </Card>
               </div>

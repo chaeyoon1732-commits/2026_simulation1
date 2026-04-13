@@ -122,17 +122,6 @@ export async function generateFeedback(
         "listening": 0~100,
         "questioning": 0~100,
         "solutionFocus": 0~100
-      },
-      "sbiAnalysis": {
-        "situation": "면담 중 발생한 특정 상황 요약",
-        "behavior": "리더가 보인 구체적인 행동이나 발언",
-        "impact": "그 행동이 구성원에게 미친 영향(심리적/성과적)"
-      },
-      "growModel": {
-        "goal": "면담을 통해 합의된 목표",
-        "reality": "현재의 객관적인 상황 파악 내용",
-        "options": "도출된 해결 대안들",
-        "will": "구성원의 실행 의지 및 향후 계획"
       }
     }
   `;
