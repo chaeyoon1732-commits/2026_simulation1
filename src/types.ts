@@ -17,6 +17,7 @@ export interface Scenario {
   category: ScenarioCategory;
   title: string;
   description: string;
+  context: string; // Detailed background for the briefing step
   goal: string;
   coreGuide: string;
   subGoals: string[]; // For the real-time checklist
@@ -53,5 +54,16 @@ export interface FeedbackReport {
     listening: number;
     questioning: number;
     solutionFocus: number;
+  };
+  sbiAnalysis: {
+    situation: string;
+    behavior: string;
+    impact: string;
+  };
+  growModel: {
+    goal: string;
+    reality: string;
+    options: string;
+    will: string;
   };
 }

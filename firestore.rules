@@ -11,7 +11,7 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // 문서 소유자 여부 확인 (uid 필드 기준)
+    // 문서 소유자 여부 확인 (userId 필드 기준)
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
@@ -19,7 +19,13 @@ service cloud.firestore {
     // 관리자 여부 확인 (이메일 및 이메일 인증 여부 기준)
     function isAdmin() {
       return isAuthenticated() && 
-        (request.auth.token.email == "chaeyoon1732@gmail.com" && request.auth.token.email_verified == true);
+        request.auth.token.email == "chaeyoon1732@gmail.com" && 
+        request.auth.token.email_verified == true;
+    }
+
+    // 데이터 타입 및 크기 검증
+    function isValidString(val, maxLen) {
+      return val is string && val.size() <= maxLen;
     }
 
     // ===============================================================
@@ -28,47 +34,61 @@ service cloud.firestore {
 
     // 페르소나 데이터 유효성 검사
     function isValidPersona(data) {
-      return data.name is string && data.name.size() > 0 &&
-             data.role is string &&
+      return isValidString(data.name, 50) &&
+             isValidString(data.role, 100) &&
              data.department in ["영업", "서비스"] &&
-             data.difficulty in ["상", "중", "하"];
+             data.difficulty in ["상", "중", "하"] &&
+             isValidString(data.emoji, 10);
     }
 
     // 시나리오 데이터 유효성 검사
     function isValidScenario(data) {
-      return data.title is string && data.title.size() > 0 &&
-             data.category is string &&
-             data.goal is string;
+      return isValidString(data.title, 100) &&
+             isValidString(data.category, 50) &&
+             isValidString(data.goal, 500) &&
+             isValidString(data.coreGuide, 1000);
     }
 
     // 시뮬레이션 결과 유효성 검사
     function isValidSimulationResult(data) {
       return data.userId == request.auth.uid &&
              data.score is number && data.score >= 0 && data.score <= 100 &&
-             data.timestamp is number;
+             data.timestamp is number &&
+             isValidString(data.personaId, 100) &&
+             isValidString(data.scenarioId, 100);
     }
 
     // ===============================================================
     // 컬렉션별 규칙 (Collection Rules)
     // ===============================================================
 
-    // 페르소나 목록: 인증된 사용자는 읽기 가능, 관리자만 쓰기 가능
+    // 페르소나 목록: 모든 사용자(비인증 포함) 읽기 가능, 관리자만 쓰기 가능
     match /personas/{personaId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAdmin() && isValidPersona(request.resource.data);
     }
 
-    // 시나리오 목록: 인증된 사용자는 읽기 가능, 관리자만 쓰기 가능
+    // 시나리오 목록: 모든 사용자(비인증 포함) 읽기 가능, 관리자만 쓰기 가능
     match /scenarios/{scenarioId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAdmin() && isValidScenario(request.resource.data);
     }
 
-    // 시뮬레이션 결과: 소유자만 읽기/쓰기 가능, 관리자는 모든 결과 읽기 가능
+    // 시뮬레이션 결과: 본인만 읽고 쓸 수 있도록 강력한 보안 적용
     match /2026_simulation/{simulationId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isAuthenticated() && isValidSimulationResult(request.resource.data);
-      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      // 읽기: 문서의 userId가 현재 로그인한 사용자와 일치해야 함
+      allow read: if isOwner(resource.data.userId);
+      
+      // 생성: 본인의 UID로만 생성 가능하며 데이터 유효성 검사 통과 필수
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      isValidSimulationResult(request.resource.data);
+      
+      // 수정/삭제: 본인만 가능하며, 수정 시 userId는 변경 불가
+      allow update: if isOwner(resource.data.userId) && 
+                      request.resource.data.userId == resource.data.userId &&
+                      isValidSimulationResult(request.resource.data);
+      allow delete: if isOwner(resource.data.userId);
     }
   }
 }
