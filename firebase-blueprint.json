@@ -1,0 +1,68 @@
+{
+  "entities": {
+    "Persona": {
+      "title": "Persona",
+      "description": "면담 대상자 페르소나 정보",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "department": { "type": "string", "enum": ["영업", "서비스"] },
+        "description": { "type": "string" },
+        "traits": { "type": "array", "items": { "type": "string" } },
+        "mbti": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["상", "중", "하"] },
+        "emoji": { "type": "string" }
+      },
+      "required": ["id", "name", "role", "department", "difficulty", "emoji"]
+    },
+    "Scenario": {
+      "title": "Scenario",
+      "description": "면담 시나리오 정보",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "category": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "goal": { "type": "string" },
+        "coreGuide": { "type": "string" },
+        "subGoals": { "type": "array", "items": { "type": "string" } },
+        "guideDirection": { "type": "string" },
+        "hints": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "category", "title", "goal", "coreGuide"]
+    },
+    "SimulationResult": {
+      "title": "SimulationResult",
+      "description": "면담 시뮬레이션 결과 리포트",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "personaId": { "type": "string" },
+        "scenarioId": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "score": { "type": "number" },
+        "report": { "type": "object" },
+        "messages": { "type": "array" }
+      },
+      "required": ["userId", "personaId", "scenarioId", "timestamp", "score"]
+    }
+  },
+  "firestore": {
+    "/personas/{personaId}": {
+      "schema": "Persona",
+      "description": "페르소나 목록"
+    },
+    "/scenarios/{scenarioId}": {
+      "schema": "Scenario",
+      "description": "시나리오 목록"
+    },
+    "/2026_simulation/{simulationId}": {
+      "schema": "SimulationResult",
+      "description": "시뮬레이션 결과 저장"
+    }
+  }
+}
