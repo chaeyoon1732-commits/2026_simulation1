@@ -4,19 +4,16 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", sans-serif;
-  --color-background: oklch(0.12 0.01 250);
-  --color-foreground: oklch(0.985 0 0);
-  --color-card: oklch(0.15 0.02 250);
-  --color-card-foreground: oklch(0.985 0 0);
-  --color-primary: #007FA8;
-  --color-primary-foreground: #FFFFFF;
-  --color-accent: #007FA8;
-  --color-accent-foreground: #FFFFFF;
+  
+  --color-hyundai-blue: #002C5F;
+  --color-hyundai-active-blue: #007FA8;
+  --color-hyundai-sand: #E5E1D8;
+  --color-hyundai-light-sand: #F6F3ED;
 }
 
 @layer base {
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased transition-colors duration-300;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
@@ -24,13 +21,13 @@
 }
 
 .glass {
-  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
+  @apply backdrop-blur-xl border shadow-2xl transition-all duration-300;
 }
 
-.glass-card {
-  @apply bg-white/10 backdrop-blur-lg border border-white/10 rounded-3xl shadow-xl transition-all duration-300;
+.glass-light {
+  @apply bg-white/80 border-black/5 shadow-lg;
 }
 
-.glass-card:hover {
-  @apply bg-white/15 border-white/20 scale-[1.02];
+.glass-dark {
+  @apply bg-white/5 border-white/10 shadow-2xl;
 }
